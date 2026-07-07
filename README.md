@@ -1,13 +1,13 @@
 # Teams MCP Server
 
-[![npm version](https://img.shields.io/npm/v/@shayanline/msteams-mcp.svg)](https://www.npmjs.com/package/@shayanline/msteams-mcp)
-[![npm downloads](https://img.shields.io/npm/dm/@shayanline/msteams-mcp.svg)](https://www.npmjs.com/package/@shayanline/msteams-mcp)
-[![node](https://img.shields.io/node/v/@shayanline/msteams-mcp.svg)](https://www.npmjs.com/package/@shayanline/msteams-mcp)
-[![license](https://img.shields.io/npm/l/@shayanline/msteams-mcp.svg)](./LICENSE)
+[![npm version](https://img.shields.io/npm/v/@CoreBridge/msteams-mcp.svg)](https://www.npmjs.com/package/@CoreBridge/msteams-mcp)
+[![npm downloads](https://img.shields.io/npm/dm/@CoreBridge/msteams-mcp.svg)](https://www.npmjs.com/package/@CoreBridge/msteams-mcp)
+[![node](https://img.shields.io/node/v/@CoreBridge/msteams-mcp.svg)](https://www.npmjs.com/package/@CoreBridge/msteams-mcp)
+[![license](https://img.shields.io/npm/l/@CoreBridge/msteams-mcp.svg)](./LICENSE)
 
 An MCP (Model Context Protocol) server that enables AI assistants to interact with Microsoft Teams. Search messages, send replies, manage favourites, and more.
 
-> **Fork notice.** This project began as a fork of [`m0nkmaster/msteams-mcp`](https://github.com/m0nkmaster/msteams-mcp) by Rob MacDonald (MIT), and is now maintained and released independently as [`@shayanline/msteams-mcp`](https://www.npmjs.com/package/@shayanline/msteams-mcp) with a substantially expanded tool set (chat management, files, tasks, scheduling, pin/mute, and more). Sincere thanks to the original author for the foundation the project is built on.
+> **Fork notice.** This project is a fork of [`@shayanline/msteams-mcp`](https://www.npmjs.com/package/@shayanline/msteams-mcp) . Sincere thanks to Rob MacDonald (MIT) and @shayanline for the foundation the project is built on.
 
 ## How It Works
 
@@ -38,7 +38,7 @@ Add to your MCP client configuration (e.g., Claude Desktop, Windsurf, Cursor):
   "mcpServers": {
     "teams": {
       "command": "npx",
-      "args": ["-y", "@shayanline/msteams-mcp@latest"]
+      "args": ["-y", "@CoreBridge/msteams-mcp@latest"]
     }
   }
 }
@@ -51,7 +51,7 @@ That's it. `npx` will automatically download and run the latest version.
 If you prefer to run from a local clone:
 
 ```bash
-git clone https://github.com/shayanline/msteams-mcp.git
+git clone https://github.com/CoreBridge/msteams-mcp.git
 cd msteams-mcp
 npm install && npm run build
 ```
@@ -296,7 +296,7 @@ If your session expires, call `teams_login` or delete the config directory.
 For local development:
 
 ```bash
-git clone https://github.com/shayanline/msteams-mcp.git
+git clone https://github.com/CoreBridge/msteams-mcp.git
 cd msteams-mcp
 npm install
 npm run build
