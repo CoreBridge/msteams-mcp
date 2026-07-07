@@ -1,7 +1,7 @@
 {
-  "name": "@shayanline/msteams-mcp",
+  "name": "@corebridge/msteams-mcp",
   "version": "0.29.2",
-  "description": "MCP server for Microsoft Teams (search, send, reply, calendar, presence). Enhanced fork of m0nkmaster/msteams-mcp.",
+  "description": "Corebridge internal fork of msteams-mcp — MCP server for Microsoft Teams (search, send, reply, calendar, presence).",
   "type": "module",
   "main": "dist/index.js",
   "bin": {
@@ -11,16 +11,9 @@
     "dist",
     "README.md"
   ],
-  "publishConfig": {
-    "access": "public"
-  },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/shayanline/msteams-mcp.git"
-  },
-  "homepage": "https://github.com/shayanline/msteams-mcp#readme",
-  "bugs": {
-    "url": "https://github.com/shayanline/msteams-mcp/issues"
+    "url": "git+https://github.com/CoreBridge/cb-msteams-mcp.git"
   },
   "engines": {
     "node": ">=18"
@@ -30,13 +23,9 @@
     "prepare": "npm run build",
     "start": "node dist/index.js",
     "dev": "tsx src/index.ts",
-    "research": "tsx src/research/explore.ts",
-    "research:search": "tsx src/research/search-research.ts",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
-    "cli": "tsx src/test/mcp-harness.ts",
-    "debug:search": "tsx src/test/debug-search.ts",
     "typecheck": "tsc --noEmit",
     "lint": "eslint src/",
     "lint:fix": "eslint src/ --fix"
@@ -45,12 +34,11 @@
     "mcp",
     "microsoft-teams",
     "teams",
-    "model-context-protocol",
-    "playwright",
-    "browser-automation"
+    "model-context-protocol"
   ],
-  "author": "Shayan Khaksar",
+  "author": "Corebridge",
   "contributors": [
+    "Shayan Khaksar (upstream author of @shayanline/msteams-mcp)",
     "Rob MacDonald (original author of m0nkmaster/msteams-mcp)"
   ],
   "license": "MIT",
