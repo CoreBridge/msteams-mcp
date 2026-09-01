@@ -10,13 +10,19 @@
  * Determines the conversation type from a Teams conversation ID.
  * 
  * Conversation ID formats:
- * - Channels: 19:xxx@thread.tacv2
+ * - Channels (new): 19:xxx@thread.tacv2
+ * - Channels (classic / legacy Skype): 19:xxx@thread.skype
  * - Meetings: 19:meeting_xxx@thread.v2
  * - 1:1 chats: 19:guid_guid@unq.gbl.spaces
  * - Group chats: 19:xxx@thread.v2 (non-meeting)
+ *
+ * Classic `@thread.skype` channels must be treated as channels so
+ * `replyToMessageId` builds a native `;messageid=` thread reply URL instead
+ * of falling through to the chat quoted-reply path (which posts a new
+ * top-level channel message).
  */
 export function getConversationType(conversationId: string): 'channel' | 'meeting' | 'chat' {
-  if (conversationId.includes('@thread.tacv2')) {
+  if (conversationId.includes('@thread.tacv2') || conversationId.includes('@thread.skype')) {
     return 'channel';
   }
   if (conversationId.includes('meeting_')) {

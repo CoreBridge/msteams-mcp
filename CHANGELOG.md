@@ -6,6 +6,11 @@ All notable changes to this project are documented here. The format is based on
 
 ## [Unreleased]
 
+### Fixed
+- Channel thread replies (`replyToMessageId`) now work for classic Teams channels whose conversation IDs end in `@thread.skype`. Those IDs were previously misclassified as chats, so the MCP embedded a quoted reply and posted a new top-level channel message instead of appending `;messageid=` for a native thread reply.
+- Messaging authentication now finds the `authtoken` cookie on the New Teams host (`teams.cloud.microsoft`). Cookie lookup matched domains by a substring test on `teams.microsoft.com`, which the new host does not contain, so once a session migrated there `authtoken` became invisible and every messaging tool failed with `AUTH_REQUIRED` even immediately after a successful login. Domain matching is now suffix-based against the known Teams origins, and when the same cookie exists on more than one host the longest-lived copy wins.
+- `teams_status` no longer reports `messaging: available` when only half the required credentials are present. It checked for `skypetoken_asm` alone while messaging also needs `authtoken`, so it claimed messaging was working while every call failed.
+
 ## [0.29.2] - 2026-07-01
 
 ### Fixed

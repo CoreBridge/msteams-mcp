@@ -264,6 +264,24 @@ const TEAMS_ORIGINS = [
   'https://teams.cloud.microsoft', // New Teams URL
 ];
 
+/** Hostnames of the known Teams origins, used for cookie domain matching. */
+const TEAMS_COOKIE_HOSTS = TEAMS_ORIGINS.map(origin => new URL(origin).hostname);
+
+/**
+ * Returns true if a cookie domain belongs to Teams.
+ *
+ * Cookie domains can be the bare host (`teams.cloud.microsoft`), a dot-prefixed
+ * wildcard (`.asyncgw.teams.microsoft.com`), or a subdomain of a known origin, so
+ * matching has to be suffix-based rather than an equality or substring check.
+ * The new Teams host (`teams.cloud.microsoft`) shares no suffix with the classic
+ * one, which is why a substring test on 'teams.microsoft.com' misses it.
+ */
+export function isTeamsCookieDomain(domain: string | undefined): boolean {
+  if (!domain) return false;
+  const host = domain.startsWith('.') ? domain.slice(1) : domain;
+  return TEAMS_COOKIE_HOSTS.some(known => host === known || host.endsWith(`.${known}`));
+}
+
 /**
  * Gets the Teams origin from session state.
  * Checks multiple known Teams domains to support government clouds.

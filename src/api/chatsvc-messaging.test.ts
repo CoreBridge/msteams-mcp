@@ -139,6 +139,20 @@ describe('sendMessage', () => {
     expect(mockHttp).toHaveBeenCalledTimes(1);
   });
 
+  it('uses the threaded URL for a classic @thread.skype channel reply', async () => {
+    // Classic Teams channels use @thread.skype. Before the fix these were
+    // misclassified as chats, so replyToMessageId embedded a quote and posted
+    // a new top-level message instead of appending ;messageid= for a thread reply.
+    mockHttp.mockResolvedValueOnce(httpOk({}));
+    await sendMessage('19:ec9fbe16ad0d4c7eb5371ca89e9be186@thread.skype', 'reply', {
+      replyToMessageId: '1788261425497',
+    });
+    expect(lastUrl()).toContain('%3Bmessageid%3D1788261425497');
+    expect(lastUrl()).toContain(encodeURIComponent('19:ec9fbe16ad0d4c7eb5371ca89e9be186@thread.skype'));
+    expect(mockHttp).toHaveBeenCalledTimes(1);
+    expect(lastBody().content).not.toContain('schema.skype.com/Reply');
+  });
+
   it('embeds a quote block for a chat reply and posts without threading', async () => {
     // first http call: getMessage GET; second: sendMessage POST
     mockHttp

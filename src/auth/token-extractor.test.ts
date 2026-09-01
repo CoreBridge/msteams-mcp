@@ -530,6 +530,51 @@ describe('extractMessageAuth', () => {
     expect(auth?.userMri).toBe('8:orgid:guid-1');
   });
 
+  it('extracts cookies split across the classic and New Teams hosts', () => {
+    // Real sessions put skypetoken_asm on .asyncgw.teams.microsoft.com and
+    // authtoken on teams.cloud.microsoft. The New Teams host shares no suffix
+    // with the classic one, so a substring test on 'teams.microsoft.com' misses
+    // authtoken entirely and every messaging call fails with AUTH_REQUIRED.
+    const skypeToken = makeJwt({ skypeid: 'orgid:guid-1' });
+    const state: SessionState = {
+      origins: [],
+      cookies: [
+        { name: 'skypetoken_asm', value: skypeToken, domain: '.asyncgw.teams.microsoft.com' },
+        { name: 'authtoken', value: 'authval', domain: 'teams.cloud.microsoft' },
+      ],
+    };
+    const auth = extractMessageAuth(state);
+    expect(auth?.skypeToken).toBe(skypeToken);
+    expect(auth?.authToken).toBe('authval');
+    expect(auth?.userMri).toBe('8:orgid:guid-1');
+  });
+
+  it('ignores cookies from unrelated domains', () => {
+    const state: SessionState = {
+      origins: [],
+      cookies: [
+        { name: 'skypetoken_asm', value: makeJwt({ skypeid: 'orgid:guid-1' }), domain: 'teams.microsoft.com' },
+        { name: 'authtoken', value: 'attacker', domain: 'notteams.microsoft.com.evil.test' },
+      ],
+    };
+    expect(extractMessageAuth(state)).toBeNull();
+  });
+
+  it('prefers the longest-lived cookie when the same name appears twice', () => {
+    const fresh = makeJwt({ skypeid: 'orgid:fresh' });
+    const state: SessionState = {
+      origins: [],
+      cookies: [
+        { name: 'skypetoken_asm', value: makeJwt({ skypeid: 'orgid:stale' }), domain: 'teams.microsoft.com', expires: 1000 },
+        { name: 'skypetoken_asm', value: fresh, domain: 'teams.cloud.microsoft', expires: 999999999 },
+        { name: 'authtoken', value: 'authval', domain: 'teams.cloud.microsoft' },
+      ],
+    };
+    const auth = extractMessageAuth(state);
+    expect(auth?.skypeToken).toBe(fresh);
+    expect(auth?.userMri).toBe('8:orgid:fresh');
+  });
+
   it('decodes Bearer= prefixed authtoken and uses full-form skypeid', () => {
     const skypeToken = makeJwt({ skypeid: '8:orgid:full-mri' });
     const authJwt = makeJwt({ oid: 'auth-oid' });
@@ -621,7 +666,10 @@ describe('getMessageAuthStatus', () => {
   it('reports valid when cookie present but expiry unparseable', () => {
     vi.mocked(readSessionState).mockReturnValue({
       origins: [],
-      cookies: [{ name: 'skypetoken_asm', value: 'opaque-token', domain: 'teams.microsoft.com' }],
+      cookies: [
+        { name: 'skypetoken_asm', value: 'opaque-token', domain: 'teams.microsoft.com' },
+        { name: 'authtoken', value: 'Bearer=abc', domain: 'teams.microsoft.com' },
+      ],
     });
     expect(getMessageAuthStatus()).toEqual({ hasToken: true });
   });
@@ -630,11 +678,36 @@ describe('getMessageAuthStatus', () => {
     const token = makeJwt({ exp: futureExp() });
     vi.mocked(readSessionState).mockReturnValue({
       origins: [],
-      cookies: [{ name: 'skypetoken_asm', value: token, domain: 'teams.microsoft.com' }],
+      cookies: [
+        { name: 'skypetoken_asm', value: token, domain: 'teams.microsoft.com' },
+        { name: 'authtoken', value: 'Bearer=abc', domain: 'teams.microsoft.com' },
+      ],
     });
     const status = getMessageAuthStatus();
     expect(status.hasToken).toBe(true);
     expect(status.minutesRemaining).toBeGreaterThan(0);
+  });
+
+  it('reports no token when authtoken is absent', () => {
+    // Messaging needs both cookies. Reporting on skypetoken_asm alone made
+    // teams_status claim messaging was available while every messaging call
+    // failed with AUTH_REQUIRED.
+    vi.mocked(readSessionState).mockReturnValue({
+      origins: [],
+      cookies: [{ name: 'skypetoken_asm', value: makeJwt({ exp: futureExp() }), domain: 'teams.microsoft.com' }],
+    });
+    expect(getMessageAuthStatus()).toEqual({ hasToken: false });
+  });
+
+  it('finds cookies on the New Teams host', () => {
+    vi.mocked(readSessionState).mockReturnValue({
+      origins: [],
+      cookies: [
+        { name: 'skypetoken_asm', value: makeJwt({ exp: futureExp() }), domain: '.asyncgw.teams.microsoft.com' },
+        { name: 'authtoken', value: 'Bearer=abc', domain: 'teams.cloud.microsoft' },
+      ],
+    });
+    expect(getMessageAuthStatus().hasToken).toBe(true);
   });
 });
 

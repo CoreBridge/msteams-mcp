@@ -12,6 +12,7 @@ import {
   writeTokenCache,
   clearTokenCache,
   getTeamsOrigin,
+  isTeamsCookieDomain,
   type SessionState,
   type TokenCache,
 } from './session-store.js';
@@ -587,6 +588,23 @@ function extractUserMriFromSubstrate(state?: SessionState): string | null {
 }
 
 /**
+ * Finds a Teams cookie by name, preferring the longest-lived match.
+ *
+ * A token cookie can exist on more than one Teams domain at once (for example a
+ * stale copy on the classic host alongside a fresh one on the new host), so pick
+ * the entry that expires last rather than whichever happens to come first.
+ */
+function findTeamsCookie(cookies: SessionState['cookies'], name: string): string | null {
+  const matches = (cookies ?? []).filter(
+    c => c.name === name && c.value && isTeamsCookieDomain(c.domain)
+  );
+  if (matches.length === 0) return null;
+
+  const newest = matches.reduce((best, c) => ((c.expires ?? 0) > (best.expires ?? 0) ? c : best));
+  return newest.value;
+}
+
+/**
  * Extracts authentication info needed for messaging API.
  * Unlike other APIs, messaging uses cookies rather than localStorage tokens.
  */
@@ -595,12 +613,13 @@ export function extractMessageAuth(state?: SessionState): MessageAuthInfo | null
   if (!sessionState) return null;
 
   const cookies = sessionState.cookies ?? [];
-  const teamsCookies = cookies.filter(c => c.domain?.includes('teams.microsoft.com'));
 
-  // Extract the two required cookies
-  const skypeToken = teamsCookies.find(c => c.name === 'skypetoken_asm')?.value ?? null;
-  const rawAuthToken = teamsCookies.find(c => c.name === 'authtoken')?.value ?? null;
-  
+  // Extract the two required cookies. These can live on different Teams hosts:
+  // skypetoken_asm on .asyncgw.teams.microsoft.com, authtoken on the New Teams
+  // host teams.cloud.microsoft.
+  const skypeToken = findTeamsCookie(cookies, 'skypetoken_asm');
+  const rawAuthToken = findTeamsCookie(cookies, 'authtoken');
+
   if (!skypeToken || !rawAuthToken) return null;
 
   // Decode authtoken (URL-encoded, may have 'Bearer=' prefix). Guard against a
@@ -640,11 +659,12 @@ export function getMessageAuthStatus(): {
   }
 
   const cookies = sessionState.cookies ?? [];
-  const skypeToken = cookies.find(
-    c => c.domain?.includes('teams.microsoft.com') && c.name === 'skypetoken_asm'
-  )?.value;
+  const skypeToken = findTeamsCookie(cookies, 'skypetoken_asm');
 
-  if (!skypeToken) {
+  // Messaging needs both cookies, so report unavailable when either is missing.
+  // Reporting on skypetoken_asm alone made teams_status claim messaging was
+  // available while every messaging call failed with AUTH_REQUIRED.
+  if (!skypeToken || !findTeamsCookie(cookies, 'authtoken')) {
     return { hasToken: false };
   }
 

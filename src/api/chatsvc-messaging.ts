@@ -783,6 +783,8 @@ export async function getConversationProperties(
       conversationType = 'Meeting';
     } else if (threadProps?.groupId) {
       conversationType = 'Channel';
+    } else if (conversationId.includes('@thread.skype')) {
+      conversationType = 'Channel';
     } else if (conversationId.includes('@thread.tacv2') || conversationId.includes('@thread.v2')) {
       conversationType = 'Chat';
     } else if (conversationId.startsWith('8:')) {
