@@ -6,7 +6,8 @@ All notable changes to this project are documented here. The format is based on
 
 ## [Unreleased]
 
-## [0.29.2] - 2026-07-01
+### Fixed
+- Channel thread replies (`replyToMessageId`) now work for classic Teams channels whose conversation IDs end in `@thread.skype`. Those IDs were previously misclassified as chats, so the MCP embedded a quoted reply and posted a new top-level channel message instead of appending `;messageid=` for a native thread reply.
 
 ### Fixed
 - Markdown to Teams HTML: a line consisting solely of a bold label (e.g. `**Target**`) is now rendered as its own paragraph instead of being joined to the following line with a `<br>`, so a heading sits directly above its content without needing a blank-line workaround. Handles indented labels and trailing hard-break markers correctly.

@@ -142,6 +142,14 @@ describe('getConversationType', () => {
     expect(getConversationType('19:QsLXSoyGdLTIChUa-elhfgq_VyIauBGVMBk3-7orc1w1@thread.tacv2')).toBe('channel');
   });
 
+  it('identifies classic Skype-thread channel conversations', () => {
+    // Legacy / classic Teams channels use @thread.skype rather than @thread.tacv2.
+    // Misclassifying these as chats causes replyToMessageId to quote+post a new
+    // top-level message instead of creating a native channel thread reply.
+    expect(getConversationType('19:ec9fbe16ad0d4c7eb5371ca89e9be186@thread.skype')).toBe('channel');
+    expect(getConversationType('19:abc@thread.skype')).toBe('channel');
+  });
+
   it('identifies meeting conversations', () => {
     expect(getConversationType('19:meeting_OWVkMDgzYWMtOGQyNi00NjQ0@thread.v2')).toBe('meeting');
     expect(getConversationType('19:meeting_abc123@thread.v2')).toBe('meeting');

@@ -260,7 +260,9 @@ export async function getUnreadConversations(): Promise<Result<UnreadConversatio
     const lastMsgTime = parseInt(lastMsg.id, 10);
     if (isNaN(lastMsgTime)) continue;
     const fromMe = lastMsg.from?.includes(auth.userMri);
-    const isChannel = tp.threadType === 'channel' || (c.id as string).includes('@thread.tacv2');
+    const isChannel = tp.threadType === 'channel'
+      || (c.id as string).includes('@thread.tacv2')
+      || (c.id as string).includes('@thread.skype');
     const displayName = tp.topic || lastMsg.imdisplayname;
 
     const horizon = props.consumptionhorizon;
@@ -365,7 +367,9 @@ export async function listConversations(
     const tp = (c.threadProperties || {}) as Record<string, string>;
     const lastMsg = c.lastMessage as Record<string, string> | undefined;
 
-    const isChannel = tp.threadType === 'channel' || id.includes('@thread.tacv2');
+    const isChannel = tp.threadType === 'channel'
+      || id.includes('@thread.tacv2')
+      || id.includes('@thread.skype');
     const isMeeting = (tp.threadType === 'meeting') || id.includes('@thread.v2') && tp.spaceThreadTopic?.toLowerCase?.().includes('meeting');
     const type: ConversationSummary['type'] = isChannel ? 'channel' : (isMeeting ? 'meeting' : 'chat');
 
